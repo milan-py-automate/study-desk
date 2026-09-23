@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Study Desk — BCA Material Organizer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1B2A41; --ink-soft:#2A3D5B; --paper:#FAF8F3; --paper-panel:#FFFFFF; --paper-line:#E4DFD3;
+    --slate:#5B6472; --slate-light:#8B93A0; --mustard:#D9A62E; --mustard-deep:#B8860F;
+    --pdf:#B5482F; --video:#2E7D6B; --audio:#6B4FA0; --slide:#2E5FA3; --radius:6px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --ink:#EDE7D9; --ink-soft:#C9C2AE; --paper:#14181F; --paper-panel:#1B212B; --paper-line:#2C3340; --slate:#9AA3B2; --slate-light:#6B7382; --mustard-deep:#E3B44A; }
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;margin:0;background:var(--paper);color:var(--ink);font-family:'Inter',system-ui,sans-serif;}
+  .font-display{font-family:'Fraunces',Georgia,serif;}
+  .font-mono{font-family:'IBM Plex Mono',monospace;}
+  #app{min-height:100%;display:flex;flex-direction:column;}
+  header{border-bottom:1px solid var(--paper-line);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;}
+  header h1{font-family:'Fraunces',serif;font-size:20px;margin:0;}
+  header .tag{font-size:11px;color:var(--slate-light);font-family:'IBM Plex Mono',monospace;}
+  .shell{display:flex;flex:1;min-height:0;}
+  .sidebar{width:230px;flex:none;border-right:1px solid var(--paper-line);display:flex;flex-direction:column;overflow-y:auto;}
+  .subject-tab{display:flex;align-items:center;justify-content:space-between;padding:11px 16px;cursor:pointer;border-left:3px solid transparent;color:var(--slate);font-size:14px;}
+  .subject-tab:hover{background:var(--paper-panel);color:var(--ink);}
+  .subject-tab.active{background:var(--paper-panel);color:var(--ink);border-left-color:var(--mustard-deep);font-weight:600;}
+  .subject-count{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--slate-light);}
+  .sidebar-add{padding:12px 16px;border-top:1px solid var(--paper-line);margin-top:auto;font-size:12.5px;color:var(--slate);cursor:pointer;}
+  .sidebar-add:hover{color:var(--ink);}
+  main{flex:1;overflow-y:auto;padding:20px 26px 60px;}
+  .subject-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px;}
+  .subject-head h2{font-family:'Fraunces',serif;font-size:24px;margin:0;}
+  .subject-meta{font-size:11.5px;color:var(--slate-light);font-family:'IBM Plex Mono',monospace;}
+  .btn{font-size:12.5px;padding:7px 12px;border-radius:var(--radius);border:1px solid var(--paper-line);background:var(--paper-panel);color:var(--slate);cursor:pointer;}
+  .btn:hover{color:var(--ink);border-color:var(--slate);}
+  .btn.danger:hover{color:var(--pdf);border-color:var(--pdf);}
+  .chapter-row{border-bottom:1px solid var(--paper-line);}
+  .chapter-head{display:flex;align-items:center;gap:12px;padding:14px 4px;cursor:pointer;}
+  .chapter-chevron{transition:transform .15s;color:var(--slate-light);}
+  .chapter-row.open .chapter-chevron{transform:rotate(90deg);color:var(--mustard-deep);}
+  .chapter-body{display:none;padding:4px 4px 20px 30px;}
+  .chapter-row.open .chapter-body{display:block;}
+  .type-block{margin-bottom:14px;}
+  .type-head{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--slate);margin-bottom:8px;}
+  .type-dot{width:8px;height:8px;border-radius:50%;flex:none;}
+  .material-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border:1px solid var(--paper-line);border-radius:var(--radius);margin-bottom:6px;background:var(--paper-panel);font-size:13.5px;}
+  .material-item:hover{border-color:var(--slate-light);}
+  .material-main{flex:1;min-width:0;cursor:pointer;}
+  .material-name{color:var(--ink);word-break:break-word;}
+  .material-sub{font-size:11px;color:var(--slate-light);margin-top:2px;}
+  .material-actions{display:flex;gap:4px;flex:none;}
+  .icon-btn{width:26px;height:26px;display:flex;align-items:center;justify-content:center;border-radius:4px;border:none;background:transparent;color:var(--slate);cursor:pointer;font-size:14px;}
+  .icon-btn:hover{background:var(--paper);color:var(--ink);}
+  .add-link{font-size:12.5px;color:var(--slate);cursor:pointer;padding:4px 0;}
+  .add-link:hover{color:var(--ink);}
+  .mini-form{display:none;flex-direction:column;gap:8px;margin:8px 0;padding:12px;border:1px dashed var(--paper-line);border-radius:var(--radius);}
+  .mini-form.open{display:flex;}
+  .mini-form input{background:var(--paper-panel);border:1px solid var(--paper-line);color:var(--ink);font-size:12.5px;padding:7px 9px;border-radius:4px;width:100%;}
+  .mini-form-actions{display:flex;gap:6px;justify-content:flex-end;}
+  .empty-note{font-size:12.5px;color:var(--slate-light);padding:6px 0;}
+  .center-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:60%;text-align:center;color:var(--slate-light);gap:10px;}
+  .modal-backdrop{position:fixed;inset:0;background:rgba(15,18,24,.6);display:none;align-items:center;justify-content:center;z-index:50;padding:20px;}
+  .modal-backdrop.open{display:flex;}
+  .modal{background:var(--paper-panel);border-radius:8px;max-width:900px;width:100%;max-height:85vh;display:flex;flex-direction:column;overflow:hidden;}
+  .modal-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--paper-line);}
+  .modal-body{flex:1;overflow:auto;min-height:300px;}
+  .modal-body iframe,.modal-body video{width:100%;height:60vh;border:none;}
+  .modal-body.padded{padding:20px;}
+  .modal-foot{display:flex;justify-content:flex-end;gap:8px;padding:10px 16px;border-top:1px solid var(--paper-line);}
+  #sidebarBackdrop{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;z-index:39;}
+  #sidebarBackdrop.open{display:block;}
+  #menuToggle{display:none;background:none;border:none;font-size:18px;cursor:pointer;color:var(--ink);}
+  @media (max-width:720px){
+    #menuToggle{display:inline-block;}
+    .sidebar{position:fixed;left:0;top:0;bottom:0;z-index:40;transform:translateX(-100%);transition:transform .2s;background:var(--paper);}
+    .sidebar.open{transform:translateX(0);}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <button id="menuToggle">☰</button>
+      <h1>Study Desk</h1>
+    </div>
+    <span class="tag" id="totalStat"></span>
+  </header>
+  <div class="shell">
+    <div id="sidebarBackdrop"></div>
+    <div class="sidebar" id="sidebar">
+      <div id="subjectList"></div>
+      <div class="sidebar-add" id="addSubjectBtn">+ Naya subject jodo</div>
+    </div>
+    <main id="main"></main>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal">
+    <div class="modal-head">
+      <strong id="modalTitle" style="font-size:14px;"></strong>
+      <button class="icon-btn" id="modalCloseBtn">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-foot">
+      <a class="btn" id="modalOpenNew" target="_blank" rel="noopener" style="display:none;text-decoration:none;">Naye tab me kholo ↗</a>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var TYPES = [
+    {key:"PDF", label:"PDFs", color:"var(--pdf)"},
+    {key:"Video", label:"Videos", color:"var(--video)"},
+    {key:"Audio", label:"Audio", color:"var(--audio)"},
+    {key:"Slide", label:"Slides", color:"var(--slide)"}
+  ];
+  var state = {subjects: [], selectedSubject: null};
+  var openChapters = {};
+
+  function escapeHtml(s){ return (s||"").replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+
+  function api(url, opts){
+    opts = opts || {};
+    opts.headers = {"Content-Type":"application/json"};
+    if (opts.body) opts.body = JSON.stringify(opts.body);
+    return fetch(url, opts).then(function(r){ return r.json().then(function(d){ if(!r.ok) throw new Error(d.error||"Kuch gadbad hui"); return d; }); });
+  }
+
+  function loadData(){
+    document.getElementById("main").innerHTML = '<div class="center-state">Load ho raha hai…</div>';
+    return api("/api/data").then(function(d){
+      state.subjects = d.subjects || [];
+      if (!state.selectedSubject || !state.subjects.find(function(s){return s.name===state.selectedSubject;})) {
+        state.selectedSubject = state.subjects.length ? state.subjects[0].name : null;
+      }
+      renderAll();
+    }).catch(function(err){
+      document.getElementById("main").innerHTML = '<div class="center-state">Data load nahi hua.<br><span class="font-mono" style="font-size:11px;">'+escapeHtml(err.message)+'</span></div>';
+    });
+  }
+
+  function renderAll(){
+    renderSidebar();
+    renderMain();
+    var total = 0;
+    state.subjects.forEach(function(s){ s.chapters.forEach(function(c){ total += c.materials.length; }); });
+    document.getElementById("totalStat").textContent = total ? total+" FILES TRACKED" : "";
+  }
+
+  function renderSidebar(){
+    var list = document.getElementById("subjectList");
+    list.innerHTML = "";
+    state.subjects.forEach(function(s){
+      var row = document.createElement("div");
+      row.className = "subject-tab" + (s.name===state.selectedSubject ? " active" : "");
+      var count = s.chapters.reduce(function(n,c){return n+c.materials.length;},0);
+      row.innerHTML = '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+escapeHtml(s.name)+'</span><span class="subject-count">'+count+'</span>';
+      row.addEventListener("click", function(){
+        state.selectedSubject = s.name; renderAll();
+        if (window.innerWidth<=720) closeSidebar();
+      });
+      list.appendChild(row);
+    });
+  }
+
+  function getSelectedSubject(){ return state.subjects.find(function(s){return s.name===state.selectedSubject;}) || null; }
+
+  function renderMain(){
+    var main = document.getElementById("main");
+    var subject = getSelectedSubject();
+    if (!subject) {
+      main.innerHTML = '<div class="center-state">Koi subject nahi hai.<br><span style="cursor:pointer;color:var(--mustard-deep);" id="emptyAddSubj">+ Pehla subject banao</span></div>';
+      var b = document.getElementById("emptyAddSubj");
+      if (b) b.addEventListener("click", addSubject);
+      return;
+    }
+    var html = '<div class="subject-head"><div><h2>'+escapeHtml(subject.name)+'</h2><div class="subject-meta">'+subject.chapters.length+' CHAPTERS · '+subject.chapters.reduce(function(n,c){return n+c.materials.length;},0)+' FILES</div></div>' +
+      '<div style="display:flex;gap:8px;"><button class="btn" id="addChapterBtn">+ Chapter</button><button class="btn danger" id="delSubjectBtn">Subject hatao</button></div></div>' +
+      '<div id="chapterList"></div>';
+    main.innerHTML = html;
+    document.getElementById("addChapterBtn").addEventListener("click", addChapter);
+    document.getElementById("delSubjectBtn").addEventListener("click", deleteSubject);
+
+    var chapterList = document.getElementById("chapterList");
+    if (subject.chapters.length === 0) {
+      chapterList.innerHTML = '<div class="empty-note">Abhi koi chapter nahi hai.</div>';
+      return;
+    }
+    subject.chapters.forEach(function(chapter, idx){ chapterList.appendChild(renderChapter(subject, chapter, idx)); });
+  }
+
+  function renderChapter(subject, chapter, idx){
+    var key = subject.name+"::"+chapter.name;
+    var isOpen = !!openChapters[key];
+    var row = document.createElement("div");
+    row.className = "chapter-row" + (isOpen ? " open" : "");
+    var head = document.createElement("div");
+    head.className = "chapter-head";
+    head.innerHTML = '<span class="font-mono" style="font-size:12px;color:var(--slate-light);width:22px;">'+String(idx+1).padStart(2,"0")+'</span>' +
+      '<span class="chapter-chevron">▶</span>' +
+      '<span style="flex:1;font-weight:500;">'+escapeHtml(chapter.name)+'</span>' +
+      '<span class="font-mono" style="font-size:11px;color:var(--slate-light);">'+chapter.materials.length+' files</span>' +
+      '<button class="icon-btn" data-role="delchap" title="Chapter hatao">✕</button>';
+    head.addEventListener("click", function(e){
+      if (e.target.getAttribute("data-role")==="delchap") return;
+      openChapters[key] = !isOpen; renderMain();
+    });
+    head.querySelector('[data-role="delchap"]').addEventListener("click", function(e){
+      e.stopPropagation();
+      if (confirm('"'+chapter.name+'" chapter aur uske saare materials hatana hai?')) {
+        api("/api/chapter", {method:"DELETE", body:{subject:subject.name, chapter:chapter.name}}).then(loadData);
+      }
+    });
+    row.appendChild(head);
+
+    var body = document.createElement("div");
+    body.className = "chapter-body";
+    TYPES.forEach(function(t){ body.appendChild(renderTypeBlock(subject, chapter, t)); });
+    row.appendChild(body);
+    return row;
+  }
+
+  function renderTypeBlock(subject, chapter, type){
+    var block = document.createElement("div");
+    block.className = "type-block";
+    var items = chapter.materials.filter(function(m){ return m.type===type.key; });
+    block.innerHTML = '<div class="type-head"><span class="type-dot" style="background:'+type.color+';"></span><strong style="color:var(--ink);">'+type.label+'</strong><span class="font-mono">'+items.length+'</span></div>';
+    if (items.length===0) {
+      var e = document.createElement("div");
+      e.className = "empty-note";
+      e.textContent = "Abhi koi "+type.label.toLowerCase()+" nahi joda.";
+      block.appendChild(e);
+    } else {
+      items.forEach(function(item){ block.appendChild(renderMaterialItem(item, type)); });
+    }
+    var addLink = document.createElement("div");
+    addLink.className = "add-link";
+    addLink.innerHTML = "+ "+type.label.replace(/s$/,"")+" jodo (link)";
+    var form = buildAddForm(subject, chapter, type, addLink);
+    addLink.addEventListener("click", function(){ form.classList.add("open"); addLink.style.display="none"; form.querySelector("input").focus(); });
+    block.appendChild(addLink);
+    block.appendChild(form);
+    return block;
+  }
+
+  function renderMaterialItem(item, type){
+    var row = document.createElement("div");
+    row.className = "material-item";
+    var sub = "Link" + (item.progress ? " · Progress: "+escapeHtml(item.progress) : "");
+    row.innerHTML =
+      '<div class="material-main" data-role="open"><span class="material-name">'+escapeHtml(item.name)+'</span><div class="material-sub">'+sub+'</div></div>' +
+      '<div class="material-actions">' +
+        '<button class="icon-btn" data-role="progress" title="Progress note karo">🕑</button>' +
+        '<button class="icon-btn" data-role="del" title="Hatao">🗑</button>' +
+      '</div>';
+    row.querySelector('[data-role="open"]').addEventListener("click", function(){ openPreview(item); });
+    row.querySelector('[data-role="progress"]').addEventListener("click", function(){
+      var val = prompt('Kahan tak dekha/suna? (jaise "10 min / 20 min" ya "50%")', item.progress || "");
+      if (val === null) return;
+      api("/api/progress/"+item.row, {method:"PUT", body:{progress: val}}).then(loadData);
+    });
+    row.querySelector('[data-role="del"]').addEventListener("click", function(){
+      if (confirm('"'+item.name+'" hatana hai?')) api("/api/row/"+item.row, {method:"DELETE"}).then(loadData);
+    });
+    return row;
+  }
+
+  function buildAddForm(subject, chapter, type, addLink){
+    var form = document.createElement("div");
+    form.className = "mini-form";
+    form.innerHTML =
+      '<input type="text" placeholder="Naam (jaise: Unit 2 Notes)" data-role="name">' +
+      '<input type="text" placeholder="Google Drive ya YouTube link paste karo" data-role="link">' +
+      '<div class="mini-form-actions"><button class="btn" data-role="cancel">Cancel</button><button class="btn" data-role="save" style="color:var(--mustard-deep);">Save</button></div>';
+    form.querySelector('[data-role="cancel"]').addEventListener("click", function(){ form.classList.remove("open"); addLink.style.display="inline-block"; });
+    form.querySelector('[data-role="save"]').addEventListener("click", function(){
+      var name = form.querySelector('[data-role="name"]').value.trim();
+      var link = form.querySelector('[data-role="link"]').value.trim();
+      if (!link) { alert("Link daalna zaroori hai"); return; }
+      api("/api/material", {method:"POST", body:{subject:subject.name, chapter:chapter.name, type:type.key, name:name, link:link}}).then(loadData);
+    });
+    return form;
+  }
+
+  // ---------- Preview ----------
+  function driveEmbedUrl(url){
+    var m = url.match(/drive\.google\.com\/file\/d\/([\w-]+)/);
+    if (m) return "https://drive.google.com/file/d/"+m[1]+"/preview";
+    return null;
+  }
+  function ytEmbedUrl(url){
+    var m = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]{6,})/);
+    return m ? "https://www.youtube.com/embed/"+m[1] : null;
+  }
+
+  function closeModal(){ document.getElementById("modalBackdrop").classList.remove("open"); document.getElementById("modalBody").innerHTML=""; }
+
+  function openPreview(item){
+    var backdrop = document.getElementById("modalBackdrop");
+    var body = document.getElementById("modalBody");
+    document.getElementById("modalTitle").textContent = item.name;
+    var openNew = document.getElementById("modalOpenNew");
+    openNew.href = item.link; openNew.style.display = "inline-block";
+    body.className = "modal-body";
+    var yt = ytEmbedUrl(item.link);
+    var dr = driveEmbedUrl(item.link);
+    if (yt) {
+      body.innerHTML = '<iframe src="'+yt+'" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>';
+    } else if (dr) {
+      body.innerHTML = '<iframe src="'+dr+'" allow="autoplay"></iframe>';
+    } else {
+      body.className = "modal-body padded";
+      body.innerHTML = '<p class="empty-note">Ye link yahan preview nahi ho saka. Neeche button se naye tab me kholo.</p>';
+    }
+    backdrop.classList.add("open");
+  }
+  document.getElementById("modalCloseBtn").addEventListener("click", closeModal);
+  document.getElementById("modalBackdrop").addEventListener("click", function(e){ if(e.target===e.currentTarget) closeModal(); });
+  document.addEventListener("keydown", function(e){ if(e.key==="Escape") closeModal(); });
+
+  // ---------- Actions ----------
+  function addSubject(){
+    var name = prompt("Naya subject ka naam likho (jaise: Data Structures)");
+    if (!name || !name.trim()) return;
+    api("/api/subject", {method:"POST", body:{subject:name.trim()}}).then(function(){
+      state.selectedSubject = name.trim(); loadData();
+    });
+  }
+  function addChapter(){
+    var subject = getSelectedSubject();
+    if (!subject) return;
+    var name = prompt("Naye chapter ka naam likho (jaise: Unit 3 - Pointers)");
+    if (!name || !name.trim()) return;
+    openChapters[subject.name+"::"+name.trim()] = true;
+    api("/api/chapter", {method:"POST", body:{subject:subject.name, chapter:name.trim()}}).then(loadData);
+  }
+  function deleteSubject(){
+    var subject = getSelectedSubject();
+    if (!subject) return;
+    if (!confirm('"'+subject.name+'" subject aur uska saara data hatana hai?')) return;
+    api("/api/subject", {method:"DELETE", body:{subject:subject.name}}).then(function(){
+      state.selectedSubject = null; loadData();
+    });
+  }
+
+  function openSidebar(){ document.getElementById("sidebar").classList.add("open"); document.getElementById("sidebarBackdrop").classList.add("open"); }
+  function closeSidebar(){ document.getElementById("sidebar").classList.remove("open"); document.getElementById("sidebarBackdrop").classList.remove("open"); }
+  document.getElementById("menuToggle").addEventListener("click", openSidebar);
+  document.getElementById("sidebarBackdrop").addEventListener("click", closeSidebar);
+  document.getElementById("addSubjectBtn").addEventListener("click", addSubject);
+
+  loadData();
+})();
+</script>
+</body>
+</html>
